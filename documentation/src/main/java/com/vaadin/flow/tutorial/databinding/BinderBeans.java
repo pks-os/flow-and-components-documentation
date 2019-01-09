@@ -38,6 +38,7 @@ public class BinderBeans {
     private TextField yearOfBirthField;
 
     public class Person {
+        private Integer id;
 
         @Max(2000)
         @Max(value = 2000, message = "Year of Birth must be less than or equal to 2000")
@@ -55,6 +56,18 @@ public class BinderBeans {
 
         public void setYearOfBirth(int yearOfBirth) {
             this.yearOfBirth = yearOfBirth;
+        }
+
+        public Integer getId() {
+            return id;
+        }
+
+        public void setId(Integer id) {
+            this.id = id;
+        }
+
+        public Person() {
+
         }
     }
 
@@ -205,10 +218,24 @@ public class BinderBeans {
         }
 
         public class Person {
+
             private String firstName;
             private String lastName;
             private Gender gender;
             private int yearOfBirth;
+            private Integer id;
+
+            public Person() {
+
+            }
+
+            public Integer getId() {
+                return id;
+            }
+
+            public void setId(Integer id) {
+                this.id = id;
+            }
 
             public String getFirstName() {
                 return firstName;

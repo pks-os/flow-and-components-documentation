@@ -97,7 +97,7 @@ if the user selects to download the resource.
 Why choose servlet over StreamResource? Using a separate servlet allows you to define a custom URL, which makes
 accessing the file easier from outside the application.
 
-You can create a custom servlet that generates the resource for us. For example
+You can create a custom servlet that generates the resource for us. For example,
 if the resource is the photo of a person, the servlet may be something like the
 following.
 
