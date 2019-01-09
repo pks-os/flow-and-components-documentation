@@ -1,75 +1,53 @@
 ---
-title: Dynamic Content
+title: Dynamic Resources
 order: 11
 layout: page
 ---
 
-= Dynamic Content
-:toc:
+= Dynamic Resources
 
-There are two options to generate content dynamically based on data provided by
-the current application state:
+There are two ways to generate resources dynamically. These resources can be
+photos of people stored in a database or a pdf file that is generated
+programmatically.
 
 * You can use a `StreamResource` which will handle URLs automatically.
-* You can build a custom URL including parameters with `String` type parameters. In this case you will need one more servlet which handles the URL.
+* You can build a custom URL including parameters with `String` type parameters.
+In this case you will need one more servlet which handles the URL.
 
-The first option is preferable since it doesn't require additional servlet and allows to use data with any type from the application state.
-
-=== Using custom servlet and request parameters
-
-You can create a custom servlet which handles "image" as a relative URL:
-
-[source,java]
-----
-@WebServlet(urlPatterns = "/image", name = "DynamicContentServlet")
-public class DynamicContentServlet extends HttpServlet {
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        resp.setContentType("image/svg+xml");
-        String name = req.getParameter("name");
-        if (name == null) {
-            name = "";
-        }
-        String svg = "<?xml version='1.0' encoding='UTF-8' standalone='no'?>"
-                + "<svg  xmlns='http://www.w3.org/2000/svg' "
-                + "xmlns:xlink='http://www.w3.org/1999/xlink'>"
-                + "<rect x='10' y='10' height='100' width='100' "
-                + "style=' fill: #90C3D4'/><text x='30' y='30' fill='red'>"
-                + name + "</text>" + "</svg>";
-        resp.getWriter().write(svg);
-    }
-}
-----
-
-The following code should be used in the application (which has its own servlet).
-It generates the resource URL on the fly based on the current application state.
-The property value of the input component is used here as a state:
-
-[source,java]
-----
-Input name = new Input();
-
-Element image = new Element("object");
-image.setAttribute("type", "image/svg+xml");
-image.getStyle().set("display", "block");
-
-NativeButton button = new NativeButton("Generate Image");
-button.addClickListener(event -> {
-    String url = "image?name=" + name.getValue();
-    image.setAttribute("data", url);
-});
-
-UI.getCurrent().getElement().appendChild(name.getElement(), image,
-    button.getElement());
-----
+The first option is preferable since it doesn't require additional servlet and
+allows us to use data with any type from the application state.
 
 ==== Using `StreamResource`
 
-Use `StreamResource` to generate dynamic content within the same servlet.
-In this case the application will generate the URL transparently for you and register an internal  handler for this URL.
-The code below shows how to implement the same functionality as above using `StreamResource`.
+Here, we explain the usage of `StreamResource` in an example. Consider we have
+some photos stored in a database and we have a method in a service that loads
+a photo from database and returns it as a byte array. To show the photo we can
+use an Image component like the code below.
+
+[source,java]
+----
+Image image = new Image();
+image.setSrc(getPhotoStreamResource(person.getId()));
+add(image);
+----
+
+[source,java]
+----
+private StreamResource getPhotoStreamResource(Integer id) {
+    byte[] bytes = personService.loadPhoto(id);
+    return new StreamResource("person-image", () -> new ByteArrayInputStream(bytes));
+}
+----
+
+[NOTE]
+The application will generate the image's URL transparently for you and register an
+internal handler for this URL.
+
+Another example is when we want to create the resource dynamically.
+In this example we also demonstrate that `StreamResource` can be used as the value
+of an attribute of an `Element`;
+
+The code below shows how to implement the functionality.
 
 [source,java]
 ----
@@ -90,10 +68,6 @@ UI.getCurrent().getElement().appendChild(name.getElement(), image,
     button.getElement());
 ----
 
-The `data` attribute value is set to the StreamResource, which will automatically be converted into a URL. A `StreamResource` uses a dynamic data provider to produce the data.
-The file name given to a `StreamResource` is used as a part of the URL and will also become the filename if the user selects to download the resource.
-And here is an example how to create a data provider:
-
 [source,java]
 ----
 private InputStream getImageInputStream(Input name) {
@@ -109,4 +83,47 @@ private InputStream getImageInputStream(Input name) {
         + value + "</text>" + "</svg>";
     return new ByteArrayInputStream(svg.getBytes(StandardCharsets.UTF_8));
 }
+----
+
+The `data` attribute value is set to the `StreamResource`, which will
+automatically be converted into a URL. A `StreamResource` uses an `InputStream`
+as a dynamic data provider to produce the data. The file name given to a
+`StreamResource` is used as a part of the URL and will also become the filename
+if the user selects to download the resource.
+
+
+=== Using custom servlet and request parameters
+
+Why choose servlet over StreamResource? Using a separate servlet allows you to define a custom URL, which makes
+accessing the file easier from outside the application.
+
+You can create a custom servlet that generates the resource for us. For example
+if the resource is the photo of a person, the servlet may be something like the
+following.
+
+[source,java]
+----
+@WebServlet(urlPatterns = "/person-photo", name = "DynamicContentServlet")
+public class DynamicContentServlet extends HttpServlet {
+
+   @Override
+   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+
+           throws ServletException, IOException {
+       resp.setContentType("image/jpeg");
+       String id = req.getParameter("id");
+
+       byte[] bytes = personService.loadPhoto(id);
+       resp.getOutputStream().write(bytes);
+   }
+}
+----
+
+The following code should be used in the application.
+
+[source,java]
+----
+Image image = new Image();
+image.setSrc("person-photo?id=" + person.getId());
+add(image);
 ----

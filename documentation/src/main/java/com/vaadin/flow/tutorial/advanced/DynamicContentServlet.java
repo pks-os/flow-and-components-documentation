@@ -25,23 +25,25 @@ import java.io.IOException;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
 
 @CodeFor("advanced/tutorial-dynamic-content.asciidoc")
-@WebServlet(urlPatterns = "/image", name = "DynamicContentServlet")
+@WebServlet(urlPatterns = "/person-photo", name = "DynamicContentServlet")
 public class DynamicContentServlet extends HttpServlet {
+
+    PersonService personService = new PersonService();
+    Person person = new Person();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        resp.setContentType("image/svg+xml");
-        String name = req.getParameter("name");
-        if (name == null) {
-            name = "";
-        }
-        String svg = "<?xml version='1.0' encoding='UTF-8' standalone='no'?>"
-                + "<svg  xmlns='http://www.w3.org/2000/svg' "
-                + "xmlns:xlink='http://www.w3.org/1999/xlink'>"
-                + "<rect x='10' y='10' height='100' width='100' "
-                + "style=' fill: #90C3D4'/><text x='30' y='30' fill='red'>"
-                + name + "</text>" + "</svg>";
-        resp.getWriter().write(svg);
+
+        resp.setContentType("image/jpeg");
+        String id = req.getParameter("id");
+
+        byte[] bytes = personService.loadPhoto(person.getId());
+        resp.getOutputStream().write(bytes);
     }
+
 }
+
+
+
+

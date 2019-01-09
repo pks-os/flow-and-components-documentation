@@ -15,19 +15,20 @@
  */
 package com.vaadin.flow.tutorial.advanced;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.html.NativeButton;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.tutorial.annotations.CodeFor;
 
 @CodeFor("advanced/tutorial-dynamic-content.asciidoc")
-public class DynamicContent {
+public class DynamicContent extends VerticalLayout {
 
     void tutorialCode() {
         Input name = new Input();
@@ -49,6 +50,7 @@ public class DynamicContent {
                 button.getElement());
     }
 
+
     private InputStream getImageInputStream(Input name) {
         String value = name.getValue();
         if (value == null) {
@@ -61,5 +63,20 @@ public class DynamicContent {
                 + "style=' fill: #90C3D4'/><text x='30' y='30' fill='red'>"
                 + value + "</text>" + "</svg>";
         return new ByteArrayInputStream(svg.getBytes(StandardCharsets.UTF_8));
+    }
+
+
+    private PersonService personService = new PersonService();
+    private Person person = new Person();
+
+    public DynamicContent() {
+        Image image = new Image();
+        image.setSrc(getPhotoStreamResource(person.getId()));
+        add(image);
+    }
+
+    private StreamResource getPhotoStreamResource(Integer id) {
+        byte[] bytes = personService.loadPhoto(id);
+        return new StreamResource("person-image", () -> new ByteArrayInputStream(bytes));
     }
 }
